@@ -198,6 +198,9 @@ class TxtToXmlConverter:
         self.txt_path = txt_path   # 待转换txt文件的地址
         self.img_path = img_path   # 存放图片文件的地址
         self.xml_path = xml_path   # 存放xml文件的地址
+        # if path not exists, create it
+        if not os.path.exists(self.xml_path):
+            os.makedirs(self.xml_path)
 
     def check_empty_files(self):
         empty_files = []
@@ -235,31 +238,39 @@ class TxtToXmlConverter:
             
             TODO 3 增加文件路径 检查机制 正反斜杠自动替换
             '''
-            imgdir = self.img_path + "/" + img_name + ".jpg"
+            # imgdir = self.img_path + "/" + img_name + ".jpg"
             # check file if 
+            img_exists_flag = False
+            for img_shuffix in ['.jpg', '.png', '.jpeg']:
+                imgdir = self.img_path + "/" + img_name + img_shuffix
+                if os.path.exists(imgdir):
+                    img_exists_flag = True
+                    break
+            if not img_exists_flag: 
+                print(f" warning ... Unable to find image file: {img_name}")
+                continue  
             pic = cv2.imread(imgdir)
 
             if pic is None:
-                pic = cv2.imread(os.path.join(self.img_path, img_name + ".png"))
-
-            if pic is None:
-                print(f"Unable to find file: {img_name}")
+                print(f"{img_name} image file exists, but unable to load image file, check authority or check if image file is normal ... ")
                 continue
 
             Pheight = pic.shape[0]
             Pwidth = pic.shape[1]
             Pdepth = pic.shape[2]
 
-            for row in txtList:
+            for txt_line_index,row in enumerate(txtList):
                 oneline = row.strip().split(" ")
 
                 if img_name != pre_img_name:
                     xml_file = open((os.path.join(self.xml_path, img_name + '.xml')), 'w')
                     xml_file.write('<annotation>\n')
-                    xml_file.write('    <folder>JPEGImages</folder>\n')
+                    xml_file.write('    <folder>images</folder>\n')
+                    # TODO 参数不要写死
                     xml_file.write('    <filename>' + img_name + '.jpg' + '</filename>\n')
                     xml_file.write('    <path>' + str(imgdir) + '</path>\n')
-                    xml_file.write('    <imglab>Russia-Ukraine War</imglab>\n')
+                    # xml_file.write('    <imglab>Russia-Ukraine War</imglab>\n')
+                    # TODO 参数不要写死
                     xml_file.write('    <source>\n')
                     xml_file.write('        <database>Unknown</database>\n')
                     xml_file.write('    </source>\n')
@@ -268,8 +279,13 @@ class TxtToXmlConverter:
                     xml_file.write('        <height>' + str(Pheight) + '</height>\n')
                     xml_file.write('        <depth>' + str(Pdepth) + '</depth>\n')
                     xml_file.write('    </size>\n')
+                    #<segmented>0</segmented>
+                    xml_file.write('    <segmented>0</segmented>\n')
                     xml_file.write('    <object>\n')
                     xml_file.write('        <name>' + classes[int(oneline[0])] + '</name>\n')
+                    #<pose>Unspecified</pose>
+                    xml_file.write('        <pose>Unspecified</pose> \n')
+                    xml_file.write('        <truncated>0</truncated> \n')
                     xml_file.write('        <difficult>' + str(0) + '</difficult>\n')
                     xml_file.write('        <bndbox>\n')
                     xml_file.write('            <xmin>' + str(
@@ -282,40 +298,61 @@ class TxtToXmlConverter:
                         int(((float(oneline[2])) * Pheight + 1) + (float(oneline[4])) * 0.5 * Pheight)) + '</ymax>\n')
                     xml_file.write('        </bndbox>\n')
                     xml_file.write('    </object>\n')
+                    if txt_line_index == len(txtList)-1:
+                        xml_file.write('</annotation>')
                     xml_file.close()
                     pre_img_name = img_name
                 else:
                     xml_file = open((os.path.join(self.xml_path, img_name + '.xml')), 'a')
                     xml_file.write('    <object>\n')
                     xml_file.write('        <name>' + classes[int(oneline[0])] + '</name>\n')
+                    #<pose>Unspecified</pose>
+                    xml_file.write('        <pose>Unspecified</pose> \n')
+                    xml_file.write('        <truncated>0</truncated> \n')
+                    xml_file.write('        <difficult>' + str(0) + '</difficult>\n')
+                    xml_file.write('        <bndbox>\n')
+                    xml_file.write('            <xmin>' + str(
+                        int(((float(oneline[1])) * Pwidth + 1) - (float(oneline[3])) * 0.5 * Pwidth)) + '</xmin>\n')
+                    xml_file.write('            <ymin>' + str(
+                        int(((float(oneline[2])) * Pheight + 1) - (float(oneline[4])) * 0.5 * Pheight)) + '</ymin>\n')
+                    xml_file.write('            <xmax>' + str(
+                        int(((float(oneline[1])) * Pwidth + 1) + (float(oneline[3])) * 0.5 * Pwidth)) + '</xmax>\n')
+                    xml_file.write('            <ymax>' + str(
+                        int(((float(oneline[2])) * Pheight + 1) + (float(oneline[4])) * 0.5 * Pheight)) + '</ymax>\n')
+                    xml_file.write('        </bndbox>\n')
+                    xml_file.write('    </object>\n')
+                    if txt_line_index == len(txtList)-1:
+                        xml_file.write('</annotation>')
+                    xml_file.close()
+                    # TODO 只加名字 不加坐标？？
 
 if __name__ == '__main__':
 
     #        txt转换为xml        #
-    # classname_path = r'G:/DataSet/ShaPan/yolo使用/labels/classes.txt'
-    # txt_path = r'G:/DataSet/ShaPan/yolo使用/labels/train'
-    # img_path = r'G:/DataSet/ShaPan/yolo使用/images/train'
-    # xml_path = r'G:/DataSet/ShaPan/yolo使用/annotations/train'
-    # converter = TxtToXmlConverter(classname_path, txt_path, img_path, xml_path)
-    # # Check for empty files
-    # empty_files = converter.check_empty_files()
-    # print('Empty files:', empty_files)
-    # # Perform the conversion
-    # converter.convert()
+    classname_path = r'G:/DataSet/ShaPan/Test02/labels/class.txt'
+    txt_path = r'G:/DataSet/ShaPan/Test02/labels'
+    img_path = r'G:/DataSet/ShaPan/Test02/images'
+    xml_path = r'G:/DataSet/ShaPan/Test02/annotations'
+    converter = TxtToXmlConverter(classname_path, txt_path, img_path, xml_path)
+    # Check for empty files
+    empty_files = converter.check_empty_files()
+    print('Empty files:', empty_files)
+    # Perform the conversion
+    converter.convert()
 
 
 
 
     # #        xml转换为txt        #
-    # Specify the input directory for XML files
-    input_dir = r"G:\DataSet\ShaPan\数据集汇总\Annotations"
-    # Specify the output directory for TXT files
-    out_dir = r"G:\DataSet\ShaPan\yolo使用\labels\test"
-    # Specify the directory for the class file
-    class_dir = r"F:\00-数据集汇总\民用低空VOC数据集"
-    # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
-    converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
-    converter.convert()
+    # # Specify the input directory for XML files
+    # input_dir = r"G:\DataSet\ShaPan\数据集汇总\Annotations"
+    # # Specify the output directory for TXT files
+    # out_dir = r"G:\DataSet\ShaPan\yolo使用\labels\test"
+    # # Specify the directory for the class file
+    # class_dir = r"F:\00-数据集汇总\民用低空VOC数据集"
+    # # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
+    # converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
+    # converter.convert()
 
 
 
