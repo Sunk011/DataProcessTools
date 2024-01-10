@@ -83,9 +83,9 @@ class XMLtoTXTConverter:
         self.input_dir = input_dir  # 存放的xml文件地址
         self.out_dir = out_dir  # 转换为txt后保存的地址
         self.class_dir = class_dir
-        self.class_list = ['person', 'car', 'truck', 'bus', 'van', 'motor', 'tricycle', 'tractor', 'camping car',
-                           'awning-tricycle', 'bicycle', 'trailer']  # xml的类别
-        # self.class_list = ['airplane','airport_tower','bridge','vehicles','ship','missile_vehicle','missile_defense_site','radar_vehicle','robomaster']
+        # self.class_list = ['person', 'car', 'truck', 'bus', 'van', 'motor', 'tricycle', 'tractor', 'camping car',
+                        #    'awning-tricycle', 'bicycle', 'trailer']  # xml的类别
+        self.class_list = ['airplane','airport_tower','bridge','vehicles','ship','missile_vehicle','missile_defense_site','radar_vehicle','robomaster']
         # '''
         #     airplane
         #     airport_tower
@@ -105,7 +105,7 @@ class XMLtoTXTConverter:
         filelist = self._get_file_list()
         self._get_class(filelist)
         self._convert_xml_to_txt(filelist)
-        self._create_class_file()
+        # self._create_class_file()
 
     def _get_file_list(self):
         file_list = []
@@ -126,7 +126,10 @@ class XMLtoTXTConverter:
             for obj in root.iter('object'):
                 cls = obj.find('name').text
                 if cls not in self.class_list:
-                    self.class_list.append(cls)
+                    
+                    # exit(0)
+                    # self.class_list.append(cls)
+                    raise ValueError(f'cls not in self.class_list: {cls} {in_file}')
 
     def _convert_xml_to_txt(self, filelist):
         for i in filelist:
@@ -329,44 +332,44 @@ class TxtToXmlConverter:
 if __name__ == '__main__':
 
     #        txt转换为xml        #
-    classname_path = r'G:/DataSet/ShaPan/Test02/labels/class.txt'
-    txt_path = r'G:/DataSet/ShaPan/Test02/labels'
-    img_path = r'G:/DataSet/ShaPan/Test02/images'
-    xml_path = r'G:/DataSet/ShaPan/Test02/annotations'
-    converter = TxtToXmlConverter(classname_path, txt_path, img_path, xml_path)
-    # Check for empty files
-    empty_files = converter.check_empty_files()
-    print('Empty files:', empty_files)
-    # Perform the conversion
-    converter.convert()
+    # classname_path = r'G:/DataSet/ShaPan/Test02/labels/class.txt'
+    # txt_path = r'G:/DataSet/ShaPan/Test02/labels'
+    # img_path = r'G:/DataSet/ShaPan/Test02/images'
+    # xml_path = r'G:/DataSet/ShaPan/Test02/annotations'
+    # converter = TxtToXmlConverter(classname_path, txt_path, img_path, xml_path)
+    # # Check for empty files
+    # empty_files = converter.check_empty_files()
+    # print('Empty files:', empty_files)
+    # # Perform the conversion
+    # converter.convert()
 
 
 
 
     # #        xml转换为txt        #
     # # Specify the input directory for XML files
-    # input_dir = r"G:\DataSet\ShaPan\数据集汇总\Annotations"
-    # # Specify the output directory for TXT files
-    # out_dir = r"G:\DataSet\ShaPan\yolo使用\labels\test"
-    # # Specify the directory for the class file
-    # class_dir = r"F:\00-数据集汇总\民用低空VOC数据集"
-    # # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
-    # converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
-    # converter.convert()
+    input_dir = r"G:\DataSet\ShaPan\Test02\annotations"
+    # Specify the output directory for TXT files
+    out_dir = r"G:\DataSet\ShaPan\Test02\labels"
+    # Specify the directory for the class file
+    class_dir = r"G:\DataSet\ShaPan\Test02"
+    # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
+    converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
+    converter.convert()
 
 
 
     #        统计xml标签中的label数量        #
     # Specify the folder path for object detection annotations
-    # folder_path = r"G:\DataSet\ShaPan\数据集汇总\Annotations"
-    # # Create an instance of the ObjectNameCounter class and print the result
-    # counter = XMLObjectNameCounter(folder_path)
-    # counter.print_result()
+    folder_path = r"G:\DataSet\ShaPan\第二次拍摄-宋俊豪+王健康Test02\annotations"
+    # Create an instance of the ObjectNameCounter class and print the result
+    counter = XMLObjectNameCounter(folder_path)
+    counter.print_result()
 
 
 
-    # #        统计xml标签中的label        #
+    #        统计xml标签中的label        #
     # folder_path = r"F:\00-数据集汇总\民用低空VOC数据集\Annotations"
-    # # Create an instance of the XMLLabelSummarizer class and print all labels
-    # label_summarizer = XMLLabelSummarizer(folder_path)
-    # label_summarizer.print_all_labels()
+    # Create an instance of the XMLLabelSummarizer class and print all labels
+    label_summarizer = XMLLabelSummarizer(folder_path)
+    label_summarizer.print_all_labels()
