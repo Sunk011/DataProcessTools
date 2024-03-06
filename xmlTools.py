@@ -329,6 +329,110 @@ class TxtToXmlConverter:
                     xml_file.close()
                     # TODO 只加名字 不加坐标？？
 
+class XmlNameModify:
+    def __init__(self,xml_path):
+        self.xml_path = xml_path
+        ''' name_calss_dict 
+            key 表示最终的label
+            values 是要替换的labels
+        '''
+        self.name_calss_dict = {
+            'Armored-car':['CM32','AFV'],
+            'Tank':['M1A1','M1A2'],
+            'Radar-car':['SA-15','SAM'],
+            'Command-car':['LAV-AD'],
+            'Launch-car ':['TianGong1','TianGong3'],
+            'FieldWork':['FieldWor']
+        }
+
+    # def name2class(self):
+    #     pass
+
+    # def get_label_name(self,xml_file):
+    #     tree = ET.parse(xml_file)
+    #     root = tree.getroot()
+    #     labels = set()  # Use a set to store labels and automatically remove duplicates
+    #     for object_elem in root.findall('object'):
+    #         label = object_elem.find('name').text
+    #         labels.add(label)
+    #     print(f'the labels of {xml_file} is {labels}')
+    #     return labels
+
+    def modify_self(self):
+        '''
+        没有指定名称修改对应关系的情况，修改类别名格式，例如 ”SAM 1“ 给为 ’SAM‘
+        '''
+        old_name = None
+        new_name = None
+        for root_path, dirs, files in os.walk(self.xml_path):
+            for file in files:
+                if file.endswith('.xml'):
+                    file_path = os.path.join(root_path, file)
+                    tree = ET.parse(file_path)
+                    root = tree.getroot()
+                    for obj in root.iter('object'):
+                        name = obj.find('name').text
+                        # if name == 'FieldWor':
+                        # print(f"===> find {file_path} name {name} ")
+                        if " " in name:
+                            old_name = name
+                            new_name = str(name).split(' ')[0]
+                            # Check if the 'name_old' element exists
+                            name_old = obj.find('name_old')
+                            if name_old is None:
+                                # If 'name_old' element does not exist, create it
+                                name_old = ET.SubElement(obj, 'name_old')
+                            # Set 'name_old' text to the old name
+                            name_old.text = name
+
+                            obj.find('name').text = new_name
+                            tree.write(file_path)
+                            print(f"modify {file_path} name {old_name} to {new_name}")
+                        
+                        for key, value in self.name_calss_dict.items():
+                            if name in value:
+                                old_name = name
+                                new_name = key
+                                name_old = obj.find('name_old')
+                                if name_old is None:name_old = ET.SubElement(obj, 'name_old')
+                                name_old.text = old_name
+                                obj.find('name').text = new_name
+                                tree.write(file_path)
+                                print(f"modify {file_path} name {old_name} to {new_name}")
+
+        print(f"modify {self.xml_path}/* name {old_name} to {new_name} done")
+        return True
+
+    def modify(self,old_name,new_name):
+        '''
+        可以指定名称修改对应关系的情况
+        '''
+        for root_path, dirs, files in os.walk(self.xml_path):
+            for file in files:
+                if file.endswith('.xml'):
+                    file_path = os.path.join(root_path, file)
+                    tree = ET.parse(file_path)
+                    root = tree.getroot()
+                    for obj in root.iter('object'):
+                        name = obj.find('name').text
+                        # if name == 'FieldWor':
+                        # print(f"===> find {file_path} name {name} ")
+                        if name == old_name:
+                            # Check if the 'name_old' element exists
+                            name_old = obj.find('name_old')
+                            if name_old is None:
+                                # If 'name_old' element does not exist, create it
+                                name_old = ET.SubElement(obj, 'name_old')
+                            # Set 'name_old' text to the old name
+                            name_old.text = old_name
+
+                            obj.find('name').text = new_name
+                            tree.write(file_path)
+                            print(f"modify {file_path} name {old_name} to {new_name}")
+                            break
+        print(f"modify {self.xml_path}/* name {old_name} to {new_name} done")
+        return True
+
 if __name__ == '__main__':
 
     #        txt转换为xml        #
@@ -345,31 +449,42 @@ if __name__ == '__main__':
 
 
 
-
     # #        xml转换为txt        #
     # # Specify the input directory for XML files
-    input_dir = r"G:\DataSet\ShaPan\Test02\annotations"
-    # Specify the output directory for TXT files
-    out_dir = r"G:\DataSet\ShaPan\Test02\labels"
-    # Specify the directory for the class file
-    class_dir = r"G:\DataSet\ShaPan\Test02"
-    # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
-    converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
-    converter.convert()
-
+    # input_dir = r"G:\DataSet\ShaPan\Test02\annotations"
+    # # Specify the output directory for TXT files
+    # out_dir = r"G:\DataSet\ShaPan\Test02\labels"
+    # # Specify the directory for the class file
+    # class_dir = r"G:\DataSet\ShaPan\Test02"
+    # # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
+    # converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
+    # converter.convert()
 
 
     #        统计xml标签中的label数量        #
     # Specify the folder path for object detection annotations
-    folder_path = r"G:\DataSet\ShaPan\第二次拍摄-宋俊豪+王健康Test02\annotations"
-    # Create an instance of the ObjectNameCounter class and print the result
-    counter = XMLObjectNameCounter(folder_path)
-    counter.print_result()
-
+    # folder_path = r"G:\DataSet\ShaPan\第二次拍摄-宋俊豪+王健康Test02\annotations"
+    # # Create an instance of the ObjectNameCounter class and print the result
+    # counter = XMLObjectNameCounter(folder_path)
+    # counter.print_result()
 
 
     #        统计xml标签中的label        #
-    # folder_path = r"F:\00-数据集汇总\民用低空VOC数据集\Annotations"
-    # Create an instance of the XMLLabelSummarizer class and print all labels
-    label_summarizer = XMLLabelSummarizer(folder_path)
-    label_summarizer.print_all_labels()
+    # folder_path = r"G:\Js_dataSet\7_OD_JS_DataSets"
+    # # Create an instance of the XMLLabelSummarizer class and print all labels
+    # label_summarizer = XMLLabelSummarizer(folder_path)
+    # label_summarizer.print_all_labels()
+
+    label_summarizer = XMLLabelSummarizer(r'G:\Js_dataSet\7_OD_JS_DataSets')
+    laebl_set = label_summarizer.summarize_labels()
+    print(laebl_set)
+    # new_label_set = []
+    # for label in laebl_set:
+    #     new_label_set.append(str(label).split(' ')[0])
+    # print(new_label_set)
+    # print(set(new_label_set))
+    xmlFun= XmlNameModify(r'G:\Js_dataSet\7_OD_JS_DataSets')
+    # xmlFun.modify('FieldWor','FieldWork')
+    xmlFun.modify_self()
+    laebl_set = label_summarizer.summarize_labels()
+    print(laebl_set)
