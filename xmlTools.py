@@ -83,9 +83,11 @@ class XMLtoTXTConverter:
         self.input_dir = input_dir  # 存放的xml文件地址
         self.out_dir = out_dir  # 转换为txt后保存的地址
         self.class_dir = class_dir
+        self.class_list = []
+        self.txt_write_mode = '覆盖'  # 追加 or 覆盖
         # self.class_list = ['person', 'car', 'truck', 'bus', 'van', 'motor', 'tricycle', 'tractor', 'camping car',
                         #    'awning-tricycle', 'bicycle', 'trailer']  # xml的类别
-        self.class_list = ['airplane','airport_tower','bridge','vehicles','ship','missile_vehicle','missile_defense_site','radar_vehicle','robomaster']
+        # self.class_list = ['airplane','airport_tower','bridge','vehicles','ship','missile_vehicle','missile_defense_site','radar_vehicle','robomaster']
         # '''
         #     airplane
         #     airport_tower
@@ -105,7 +107,7 @@ class XMLtoTXTConverter:
         filelist = self._get_file_list()
         self._get_class(filelist)
         self._convert_xml_to_txt(filelist)
-        # self._create_class_file()
+        self._create_class_file()
 
     def _get_file_list(self):
         file_list = []
@@ -125,11 +127,12 @@ class XMLtoTXTConverter:
             root = filetree.getroot()
             for obj in root.iter('object'):
                 cls = obj.find('name').text
+                # if self.class_list is not [] and (cls not in self.class_list):
+                #     # exit(0)
+                #     # self.class_list.append(cls)
+                #     raise ValueError(f'cls not in self.class_list: {cls} {in_file}')
                 if cls not in self.class_list:
-                    
-                    # exit(0)
-                    # self.class_list.append(cls)
-                    raise ValueError(f'cls not in self.class_list: {cls} {in_file}')
+                    self.class_list.append(cls)
 
     def _convert_xml_to_txt(self, filelist):
         for i in filelist:
@@ -161,9 +164,13 @@ class XMLtoTXTConverter:
                     txtresult = txtresult + txt
 
             txt_file_path = os.path.join(self.out_dir, i + ".txt")
-            f = open(txt_file_path, 'a')
+            if self.txt_write_mode == '追加':
+                f = open(txt_file_path, 'a')
+            elif self.txt_write_mode == '覆盖':
+                f = open(txt_file_path, 'w')
             f.write(txtresult)
             f.close()
+            print(f"convert {file_path} to {txt_file_path} done")
 
     def _convert_coordinate(self, imgshape, bbox):
         xmin, xmax, ymin, ymax = bbox
@@ -189,7 +196,6 @@ class XMLtoTXTConverter:
             class_result = class_result + i + "\n"
         f.write(class_result)
         f.close()
-
 
 
 class TxtToXmlConverter:
