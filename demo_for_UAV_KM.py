@@ -1,18 +1,8 @@
-from xmlTools import XMLtoTXTConverter
+'''
+UAV 数据集处理代码，统计数据集分布情况，
+'''
 import os
 import random
-
-# ======================= xml转换为txt ======================= #
-# Specify the input directory for XML files
-# input_dir = r"G:\Js_dataSet\7_OD_JS_DataSets\Annotations"
-# # Specify the output directory for TXT files
-# out_dir = r"G:\Js_dataSet\7_OD_JS_DataSets\labels"
-# # Specify the directory for the class file
-# class_dir = r"G:\Js_dataSet\7_OD_JS_DataSets\labels"
-# # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
-# converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
-# converter.convert()
-
 # ======================= 划分数据集 ======================= #
 xmllabelpath = 'G:/Js_dataSet/7_OD_JS_DataSets/Annotations'  # 输入的xml文件地址
 txtlabelpath = 'G:/Js_dataSet/7_OD_JS_DataSets/labels'
