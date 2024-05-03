@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 import xml.etree.ElementTree as ET
 
 def count_dataset_labels_xml_pie(dataset_path):
+    # check if the dataset path exists
+    if not os.path.exists(dataset_path):
+        print(f"Dataset path '{dataset_path}' does not exist.")
+        return
     # 初始化计数器
     labels_counter = Counter()
 
@@ -32,7 +36,7 @@ def count_dataset_labels_xml_pie(dataset_path):
     wedges, texts, autotexts = plt.pie(values, labels=labels, autopct=lambda pct: "{:.1f}%".format(pct) if pct > 1 else '',
                                        textprops=dict(color="w"), startangle=140, colors=plt.cm.Paired(range(len(labels))))
 
-    plt.legend(wedges, labels, title="Labels", loc="up left")
+    plt.legend(wedges, labels, title="Labels", loc="best")
     plt.title('Dataset Labels Distribution (Pie Chart)')
     plt.setp(autotexts, size=10, weight="bold")
     plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
@@ -113,4 +117,4 @@ def count_dataset_labels_for_txt(dataset_path):
 if __name__ == '__main__':
     # 调用函数，这里的"path_to_your_dataset"需要替换为你的数据集标注文件所在的路径
     # count_dataset_labels_xml(r'G:\Js_dataSet\7_OD_JS_DataSets') 
-    count_dataset_labels_xml_pie(r'G:\Js_dataSet\7_OD_JS_DataSets')
+    count_dataset_labels_xml_pie(r'F:\Temp\Launch-car\Annotations')
