@@ -2,15 +2,40 @@ import os
 import cv2
 import xml.etree.ElementTree as ET
 # from xml.etree import ElementTree
+def print_color(data, color='green'):
+    """
+    颜色样式打印输出功能
+    :param data: 打印内容
+    :param color: 指定颜色，默认为绿色('green')
+    :return:
+    """
+    # 定义颜色名称到ANSI代码的映射
+    color_map = {
+        'black': '30',  # 黑色
+        'red': '31',    # 红色
+        'green': '32',  # 绿色
+        'yellow': '33', # 黄色
+        'blue': '34',   # 蓝色
+        'magenta': '35',# 品红
+        'cyan': '36',   # 青色
+        'white': '37'   # 白色
+    }
+    
+    # 获取颜色代码，若输入的颜色不在映射中，则默认使用绿色
+    ansi_color = color_map.get(color, '32')
+    
+    print(f"\033[1;{ansi_color}m{data}\033[0m")
 
 
 class XMLLabelSummarizer:
     '''
-    统计xml文件夹中所有xml的标签
+    统计xml文件夹及其子文件夹中所有xml的标签
     '''
 
     def __init__(self, folder_path):
-        self.folder_path = folder_path  # the folder_path of the xml foder
+        self.folder_path = folder_path  # the folder_path of the xml folder
+        self.name_count = {}
+        self.class_names = set()
 
     def parse_xml_file(self, xml_file):
         tree = ET.parse(xml_file)
@@ -19,43 +44,40 @@ class XMLLabelSummarizer:
         for object_elem in root.findall('object'):
             label = object_elem.find('name').text
             labels.add(label)
+        self._count_names(root)
         return labels
 
-    def summarize_labels(self):
+    def summarize_labels(self,folder_path):
         labels = set()  # Use a set to store labels and automatically remove duplicates
-        for filename in os.listdir(self.folder_path):
-            if filename.endswith('.xml'):
-                xml_file = os.path.join(self.folder_path, filename)
-                labels |= self.parse_xml_file(xml_file)  # Use the bitwise OR operator to merge multiple sets
+        for root_dir, dirs, files in os.walk(folder_path):
+            print_color(f"===>  summarize files from path {root_dir} ",'green')
+            if files:
+                print(f"===>  Find {len(files)} files in path {root_dir} ")
+                for file in files:
+                    if file.endswith('.xml'):
+                        xml_file = os.path.join(root_dir, file)
+                        labels |= self.parse_xml_file(xml_file)  # Use the bitwise OR operator to merge multiple sets
+            else:
+                print_color(f"===>  No xml found in path {root_dir}",color='red')
+        self.class_names = labels
         return labels
 
     def print_all_labels(self):
-        all_labels = self.summarize_labels()
+        all_labels = self.summarize_labels(self.folder_path)
+        print_color(f"======> all classes set in {self.folder_path} <======",'green')
         for label in all_labels:
             print(label)
-
-
-class XMLObjectNameCounter:
-    '''
-    统计xml文件夹中所有xml的标签的数量
-    '''
-
-    def __init__(self, folder_path):
-        self.folder_path = folder_path
-        self.name_count = {}
-
-    def count_object_names(self):
-        for file_name in os.listdir(self.folder_path):
-            if file_name.endswith('.xml'):
-                file_path = os.path.join(self.folder_path, file_name)
-                try:
-                    tree = ET.parse(file_path)
-                    root = tree.getroot()
-                except ET.ParseError as e:
-                    print(f"Error parsing {file_path}: {e}")
-                    continue
-                self._count_names(root)
-        return self.name_count
+        # for name, count in self.name_count.items():
+        #     print(f"{name}: {count}")
+        # 找到最长的键的长度，以便对齐
+        max_key_length = max(len(key) for key in self.name_count)
+        # 打印标题
+        print(f"{'Item':<{max_key_length}} | {'Count'}")
+        # 打印分隔线
+        print("-" * (max_key_length + 9))
+        for key, value in self.name_count.items():
+            print(f"{key:<{max_key_length}} | {value}")
+        print_color(f"======> all classes set in {self.folder_path} <======",'green')
 
     def _count_names(self, element):
         if element.tag == 'object':
@@ -66,25 +88,30 @@ class XMLObjectNameCounter:
         for child in element:
             self._count_names(child)
 
-    def print_result(self):
-        result = self.count_object_names()
-        for name, count in result.items():
-            print(f"{name}: {count}")
-
+    def get_class_list(self):
+        sorted_keys = sorted(self.name_count, key=self.name_count.get, reverse=True)
+        return list(sorted_keys)
 
 class XMLtoTXTConverter:
     '''
+    input_dir # 存放的xml文件地址
+    out_dir # 转换为txt后保存的地址
+    txt_write_mode  'w' 表示覆盖 'a' 表示追加
+
     将xml标签转换为yolo的txt格式
     TODO 1 : 
         如果 class_list 已经存在 则根据 现有的list确定ID 传入参数为 class_names.txt 默认为空 如果为空则随机生成然后给出txt文件
     '''
 
-    def __init__(self, input_dir, out_dir, class_dir):
+    def __init__(self, input_dir, out_dir, class_dir=None, class_list=None, txt_write_mode='w'):
         self.input_dir = input_dir  # 存放的xml文件地址
         self.out_dir = out_dir  # 转换为txt后保存的地址
         self.class_dir = class_dir
-        self.class_list = []
-        self.txt_write_mode = '覆盖'  # 追加 or 覆盖
+        self.class_list = class_list
+        self.txt_write_mode = txt_write_mode  # 追加 or 覆盖
+        if not (class_dir or class_list):
+            print_color(f"class_dir or class_list must be provided", color='red')
+            exit()
         # self.class_list = ['person', 'car', 'truck', 'bus', 'van', 'motor', 'tricycle', 'tractor', 'camping car',
                         #    'awning-tricycle', 'bicycle', 'trailer']  # xml的类别
         # self.class_list = ['airplane','airport_tower','bridge','vehicles','ship','missile_vehicle','missile_defense_site','radar_vehicle','robomaster']
@@ -104,39 +131,28 @@ class XMLtoTXTConverter:
         os.makedirs(self.out_dir, exist_ok=True)
 
     def convert(self):
-        filelist = self._get_file_list()
-        self._get_class(filelist)
-        self._convert_xml_to_txt(filelist)
-        self._create_class_file()
+        file_name_list,file_path_list = self._get_file_list()
+        # self._get_class(filelist)
+        self._convert_xml_to_txt(file_path_list)
+        if self.class_dir: self._create_class_file()
 
+    # def convert_for_all_subpath(self):
+        
     def _get_file_list(self):
-        file_list = []
+        file_name_list = []
+        file_path_list = []
         for root, dirs, files in os.walk(self.input_dir):
             for file in files:
-                if os.path.splitext(file)[1] == '.xml':
+                if file.endswith('.xml'):
                     file_name = os.path.splitext(file)[0]
-                    file_list.append(file_name)
-        return file_list
+                    file_path = os.path.join(root,file)
+                    file_path_list.append(file_path)
+                    file_name_list.append(file_name)
+        return file_name_list,file_path_list
 
-    def _get_class(self, filelist):
-        for i in filelist:
-            file_path = os.path.join(self.input_dir, i + ".xml")
-            in_file = open(file_path, encoding='UTF-8')
-            filetree = ET.parse(in_file)
-            in_file.close()
-            root = filetree.getroot()
-            for obj in root.iter('object'):
-                cls = obj.find('name').text
-                # if self.class_list is not [] and (cls not in self.class_list):
-                #     # exit(0)
-                #     # self.class_list.append(cls)
-                #     raise ValueError(f'cls not in self.class_list: {cls} {in_file}')
-                if cls not in self.class_list:
-                    self.class_list.append(cls)
-
-    def _convert_xml_to_txt(self, filelist):
-        for i in filelist:
-            file_path = os.path.join(self.input_dir, i + ".xml")
+    def _convert_xml_to_txt(self, file_path_list):
+        for file_path in file_path_list:
+            # file_path = os.path.join(self.input_dir, i + ".xml")
             outfile = open(file_path, encoding='UTF-8')
             filetree = ET.parse(outfile)
             outfile.close()
@@ -162,12 +178,9 @@ class XMLtoTXTConverter:
                     x, y, w, h = self._convert_coordinate(imgshape, bbox_coor)
                     txt = '{} {} {} {} {}\n'.format(obj_id, x, y, w, h)
                     txtresult = txtresult + txt
-
-            txt_file_path = os.path.join(self.out_dir, i + ".txt")
-            if self.txt_write_mode == '追加':
-                f = open(txt_file_path, 'a')
-            elif self.txt_write_mode == '覆盖':
-                f = open(txt_file_path, 'w')
+            txt_file_path = os.path.basename(file_path).replace('.xml','.txt')
+            txt_file_path = os.path.join(self.out_dir, txt_file_path)
+            f = open(txt_file_path, self.txt_write_mode)
             f.write(txtresult)
             f.close()
             print(f"convert {file_path} to {txt_file_path} done")
@@ -441,56 +454,16 @@ class XmlNameModify:
 
 if __name__ == '__main__':
 
-    #        txt转换为xml        #
-    # classname_path = r'G:/DataSet/ShaPan/Test02/labels/class.txt'
-    # txt_path = r'G:/DataSet/ShaPan/Test02/labels'
-    # img_path = r'G:/DataSet/ShaPan/Test02/images'
-    # xml_path = r'G:/DataSet/ShaPan/Test02/annotations'
-    # converter = TxtToXmlConverter(classname_path, txt_path, img_path, xml_path)
-    # # Check for empty files
-    # empty_files = converter.check_empty_files()
-    # print('Empty files:', empty_files)
-    # # Perform the conversion
-    # converter.convert()
+    ## For xml  dataset
+    dataset_path = r'D:\Github\365\Data_LHF\data'
+    data_labels = r'D:\Github\365\Data_LHF\data_labels'
+    
+    ### ========> Step 1. 分析数据集情况 获取类别分类(按照从数量多到少的顺序)
+    label_summarizer = XMLLabelSummarizer(dataset_path)
+    label_summarizer.print_all_labels()
+    class_list = label_summarizer.get_class_list()
+    print(class_list)
 
-
-
-    # #        xml转换为txt        #
-    # # Specify the input directory for XML files
-    # input_dir = r"G:\DataSet\ShaPan\Test02\annotations"
-    # # Specify the output directory for TXT files
-    # out_dir = r"G:\DataSet\ShaPan\Test02\labels"
-    # # Specify the directory for the class file
-    # class_dir = r"G:\DataSet\ShaPan\Test02"
-    # # Create an instance of the XMLtoTXTConverter class and convert XML to TXT
-    # converter = XMLtoTXTConverter(input_dir, out_dir, class_dir)
-    # converter.convert()
-
-
-    #        统计xml标签中的label数量        #
-    # Specify the folder path for object detection annotations
-    # folder_path = r"G:\DataSet\ShaPan\第二次拍摄-宋俊豪+王健康Test02\annotations"
-    # # Create an instance of the ObjectNameCounter class and print the result
-    # counter = XMLObjectNameCounter(folder_path)
-    # counter.print_result()
-
-
-    #        统计xml标签中的label        #
-    # folder_path = r"G:\Js_dataSet\7_OD_JS_DataSets"
-    # # Create an instance of the XMLLabelSummarizer class and print all labels
-    # label_summarizer = XMLLabelSummarizer(folder_path)
-    # label_summarizer.print_all_labels()
-
-    label_summarizer = XMLLabelSummarizer(r'G:\Js_dataSet\7_OD_JS_DataSets')
-    laebl_set = label_summarizer.summarize_labels()
-    print(laebl_set)
-    # new_label_set = []
-    # for label in laebl_set:
-    #     new_label_set.append(str(label).split(' ')[0])
-    # print(new_label_set)
-    # print(set(new_label_set))
-    xmlFun= XmlNameModify(r'G:\Js_dataSet\7_OD_JS_DataSets')
-    # xmlFun.modify('FieldWor','FieldWork')
-    xmlFun.modify_self()
-    laebl_set = label_summarizer.summarize_labels()
-    print(laebl_set)
+    ### ========> Step 2. xml 转换为 txt
+    # label_convert = XMLtoTXTConverter(input_dir=dataset_path,out_dir=data_labels,class_list=class_list)
+    # label_convert.convert()

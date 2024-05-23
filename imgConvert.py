@@ -25,5 +25,5 @@ def convert_all_png_to_jpg(png_folder_path, jpg_folder_path, quality=85):
                 convert_png_to_jpg(png_file_path, jpg_file_path, quality)
         
 if __name__ == '__main__':
-    convert_all_png_to_jpg(r'H:\00-数据集汇总\VSAI\images', r'H:\00-数据集汇总\VSAI\images_jpg', 90)
+    convert_all_png_to_jpg(r'H:\data-xinzhu', r'H:\data-xinzhu', 90)
     
