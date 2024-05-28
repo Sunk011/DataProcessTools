@@ -103,14 +103,15 @@ class XMLtoTXTConverter:
         如果 class_list 已经存在 则根据 现有的list确定ID 传入参数为 class_names.txt 默认为空 如果为空则随机生成然后给出txt文件
     '''
 
-    def __init__(self, input_dir, out_dir, class_dir=None, class_list=None, txt_write_mode='w'):
+    def __init__(self, input_dir, out_dir, class_dir=None, class_list=None, class_map_dist=None, txt_write_mode='w'):
         self.input_dir = input_dir  # 存放的xml文件地址
         self.out_dir = out_dir  # 转换为txt后保存的地址
         self.class_dir = class_dir
         self.class_list = class_list
+        self.class_map_dist = class_map_dist
         self.txt_write_mode = txt_write_mode  # 追加 or 覆盖
-        if not (class_dir or class_list):
-            print_color(f"class_dir or class_list must be provided", color='red')
+        if not (class_dir or class_list or class_map_dist):
+            print_color(f"class_dir or class_list or class_map_dist must be provided", color='red')
             exit()
         # self.class_list = ['person', 'car', 'truck', 'bus', 'van', 'motor', 'tricycle', 'tractor', 'camping car',
                         #    'awning-tricycle', 'bicycle', 'trailer']  # xml的类别
@@ -166,7 +167,12 @@ class XMLtoTXTConverter:
             txtresult = ''
             for obj in root.findall('object'):
                 obj_name = obj.find('name').text
-                obj_id = self.class_list.index(obj_name)
+                # TODO 指定表现映射后 修改id映射
+                if self.class_map_dist and self.class_list:
+                    new_class_name = self.class_map_dist[obj_name]
+                    obj_id = self.class_list.index(new_class_name)
+                elif self.class_list:
+                    obj_id = self.class_list.index(obj_name)
                 bbox = obj.find('bndbox')
                 if bbox is not None:
                     xmin = float(bbox.find('xmin').text)
@@ -209,6 +215,7 @@ class XMLtoTXTConverter:
             class_result = class_result + i + "\n"
         f.write(class_result)
         f.close()
+        
 
 
 class TxtToXmlConverter:
@@ -455,7 +462,7 @@ class XmlNameModify:
 if __name__ == '__main__':
 
     ## For xml  dataset
-    dataset_path = r'D:\Github\365\Data_LHF\data'
+    dataset_path = r'D:\Github\365\Data_LHF\data_1_365'
     data_labels = r'D:\Github\365\Data_LHF\data_labels'
     
     ### ========> Step 1. 分析数据集情况 获取类别分类(按照从数量多到少的顺序)
@@ -464,6 +471,20 @@ if __name__ == '__main__':
     class_list = label_summarizer.get_class_list()
     print(class_list)
 
+    ### ========> Step 2. xml 类别名修改
+    # lebel_rename = XmlNameModify(dataset_path)
+    # lebel_rename.modify('warcraft','plane')
+
     ### ========> Step 2. xml 转换为 txt
-    # label_convert = XMLtoTXTConverter(input_dir=dataset_path,out_dir=data_labels,class_list=class_list)
-    # label_convert.convert()
+    # ['chariot', 'car', 'person', 'truck', 'tank', 'plane']
+    new_class_list = ['J-vehicle','M-vehicle','person','plane']
+    class_map_dist = {
+        'chariot'   :'J-vehicle',
+        'car'       :'M-vehicle',
+        'person'    :'person',
+        'truck'     :'M-vehicle',
+        'tank'      :'J-vehicle',
+        'plane'     :'plane'
+    }
+    label_convert = XMLtoTXTConverter(input_dir=dataset_path,out_dir=data_labels,class_list=new_class_list,class_map_dist=class_map_dist)
+    label_convert.convert()
