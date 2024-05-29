@@ -462,8 +462,8 @@ class XmlNameModify:
 if __name__ == '__main__':
 
     ## For xml  dataset
-    dataset_path = r'D:\Github\365\Data_LHF\data_1_365'
-    data_labels = r'D:\Github\365\Data_LHF\data_labels'
+    dataset_path = r'/home/lhf/DataSets/mnt_datasets/UAV_AG_all/365_AG/' #data_1_365
+    data_labels  = r'/home/lhf/DataSets/mnt_datasets/UAV_AG_all/365_AG/ImageSet/labels'
     
     ### ========> Step 1. 分析数据集情况 获取类别分类(按照从数量多到少的顺序)
     label_summarizer = XMLLabelSummarizer(dataset_path)
@@ -487,4 +487,4 @@ if __name__ == '__main__':
         'plane'     :'plane'
     }
     label_convert = XMLtoTXTConverter(input_dir=dataset_path,out_dir=data_labels,class_list=new_class_list,class_map_dist=class_map_dist)
-    label_convert.convert()
+    # label_convert.convert()

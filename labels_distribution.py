@@ -4,7 +4,7 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import xml.etree.ElementTree as ET
 
-def count_dataset_labels_xml_pie(dataset_path):
+def count_dataset_labels_xml_pie(dataset_path,show=False,save=True):
     # check if the dataset path exists
     if not os.path.exists(dataset_path):
         print(f"Dataset path '{dataset_path}' does not exist.")
@@ -40,13 +40,14 @@ def count_dataset_labels_xml_pie(dataset_path):
     plt.title('Dataset Labels Distribution (Pie Chart)')
     plt.setp(autotexts, size=10, weight="bold")
     plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-    plt.show()
+    if show:plt.show()
+    if save:plt.savefig('Dataset_Labels_Distribution_Pie_Chart.png', dpi=300)
 
 # 请替换为你的数据集路径
 # count_dataset_labels_xml_pie('path_to_your_dataset')
 
 
-def count_dataset_labels_xml(dataset_path):
+def count_dataset_labels_xml(dataset_path,show=False,save=True):
     # 初始化计数器
     labels_counter = Counter()
 
@@ -79,7 +80,8 @@ def count_dataset_labels_xml(dataset_path):
     plt.ylabel('Frequency')
     plt.title('Dataset Labels Distribution')
     plt.xticks(rotation=45)
-    plt.show()
+    if show: plt.show()
+    if save:plt.savefig('Dataset_Labels_Distribution_bar_Chart.png', dpi=300)
 
 def count_dataset_labels_for_txt(dataset_path):
     # 类别标签和对应的名称（根据实际情况进行调整）
