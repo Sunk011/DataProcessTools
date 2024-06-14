@@ -169,9 +169,13 @@ class XMLtoTXTConverter:
                 obj_name = obj.find('name').text
                 # TODO 指定表现映射后 修改id映射
                 if self.class_map_dist and self.class_list:
+                    if obj_name not in self.class_map_dist.keys():
+                        continue
                     new_class_name = self.class_map_dist[obj_name]
                     obj_id = self.class_list.index(new_class_name)
                 elif self.class_list:
+                    if obj_name not in self.class_list:
+                        continue
                     obj_id = self.class_list.index(obj_name)
                 bbox = obj.find('bndbox')
                 if bbox is not None:
