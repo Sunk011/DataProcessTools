@@ -2,7 +2,7 @@
 
 ## 文件说明
 
-- split_dataset.py 
+-  [split_dataset.py](./split_dataset.py)
     > 将指定路径的图像和标注文件划分为训练集、验证集、测试集，并生成相应的txt文件列表
     ```python
     # 配置参数 - 请根据实际情况修改
@@ -47,7 +47,8 @@
 
 ---
 
-- yolo_labels_distribution.py
+-  [yolo_labels_distribution.py](./yolo_labels_distribution.py)
+
     > 输入标注目录，输出类别分布统计信息，并生成柱状图和饼图进行可视化
     ```python
     # 创建分析器实例
