@@ -44,6 +44,22 @@
         print(f"Error: {e}")
         print("Please check your configuration and try again.")
     ```
+
+---
+
+- yolo_labels_distribution.py
+    > 输入标注目录，输出类别分布统计信息，并生成柱状图和饼图进行可视化
+    ```python
+    # 创建分析器实例
+    analyzer = YOLOLabelAnalyzer(
+        labels_path='/home/sk/datasets/VisDrone_yolo/labels',
+        classes_file='/home/sk/datasets/VisDrone_yolo/txt/visdrone.yaml',
+        output_dir='/home/sk/datasets/VisDrone_yolo/output'
+    )
+    
+    # 运行分析
+    analyzer.run_analysis(show=False, save=True)
+    ```
 ---
 
 - xmlTools.py
