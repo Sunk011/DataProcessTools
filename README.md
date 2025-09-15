@@ -63,7 +63,20 @@
     ```
 ---
 
-- xmlTools.py
+- [class_mapping.py](./class_mapping.py)
+    > 递归批量修改 YOLO 格式标注文件中类别 ID 的 Python 工具类，支持目录结构镜像保存与严格类别映射校验
+    ```python
+    mapper = YOLOClassMapper(
+        input_dir="./tmp/labels_ori",
+        output_dir="./tmp/labels_mapped",
+        class_mapping={0: 10, 1: 20, 2: 30, 3: 40}
+        )
+    mapper.process()    
+
+    ```
+---
+
+- []()
     > 
     ```python
 
