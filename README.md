@@ -84,6 +84,22 @@
     ```
 ---
 
+- [check_format.py](./check_format.py)
+    > 输入指定的图像目录和标注目录，检查它们之间的对应关系，验证标注文件格式的正确性，并生成详细的检查报告。
+    ```python
+    images_dir = "/home/sk/datasets/car_vis_v2/images/train"  # 图像目录路径
+    labels_dir = "/home/sk/datasets/car_vis_v2/labels/train"  # 标注目录路径
+    max_class_id = 3  # 最大类别ID（例如4类则设为3，设为None则不检查类别范围）
+    report_path = "/home/sk/datasets/car_vis_v2/validation_report.txt"  # 报告保存路径（可选）
+    
+    # 方式2: 检查整个数据集的train和val集合
+    # 如果要检查完整数据集，可以分别调用train和val
+    
+    print("正在检查训练集...")
+    result = validate_yolo_dataset(images_dir, labels_dir, max_class_id, report_path)
+    ```
+---
+
 - []()
     > 
     ```python
